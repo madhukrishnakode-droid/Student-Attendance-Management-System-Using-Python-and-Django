@@ -1,0 +1,49 @@
+{% extends "attendance/base.html" %}
+{% block title %}Delete Student — Attendance System{% endblock %}
+{% block page_title %}Delete Student{% endblock %}
+{% block breadcrumb %}Home &rsaquo; <a href="{% url 'student_list' %}">Students</a> &rsaquo; Delete{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete
+            </div>
+            <div class="card-body text-center p-4">
+                <div class="mb-3" style="font-size:3rem;color:#e53e3e;">
+                    <i class="bi bi-person-x-fill"></i>
+                </div>
+                <h5 class="fw-600 mb-2">Delete "{{ student.full_name }}"?</h5>
+                <p class="text-muted mb-1">Roll Number: <strong>{{ student.roll_number }}</strong></p>
+                <p class="text-muted mb-3">Department: {{ student.get_department_display }}</p>
+
+                {% if att_count > 0 %}
+                <div class="alert alert-warning text-start">
+                    <i class="bi bi-shield-exclamation me-2"></i>
+                    This student has <strong>{{ att_count }}</strong> attendance record(s).
+                    Deletion is not allowed to preserve historical data.
+                </div>
+                <a href="{% url 'student_detail' student.pk %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Go Back
+                </a>
+                {% else %}
+                <div class="alert alert-danger text-start">
+                    <i class="bi bi-trash me-2"></i>
+                    This action is <strong>permanent</strong> and cannot be undone.
+                </div>
+                <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger me-2">
+                        <i class="bi bi-trash me-1"></i>Yes, Delete
+                    </button>
+                </form>
+                <a href="{% url 'student_detail' student.pk %}" class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "attendance/base.html" %}
+{% block title %}Attendance History — {{ student.full_name }}{% endblock %}
+{% block page_title %}Attendance History{% endblock %}
+{% block breadcrumb %}Home &rsaquo; <a href="{% url 'student_list' %}">Students</a> &rsaquo;
+    <a href="{% url 'student_detail' student.pk %}">{{ student.full_name }}</a> &rsaquo; History{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-calendar3 me-2 text-blue"></i>Attendance History</h1>
+    <a href="{% url 'student_detail' student.pk %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Back to Detail
+    </a>
+</div>
+
+<!-- Student Info Card -->
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <strong class="fw-700">{{ student.full_name }}</strong>
+                <span class="badge-dept ms-2">{{ student.roll_number }}</span>
+                <span class="text-muted ms-2">{{ student.get_department_display }} &mdash; {{ student.get_year_of_study_display }}</span>
+            </div>
+            <div class="col-md-6 text-md-end mt-2 mt-md-0">
+                <form method="get" class="d-inline-flex gap-2 align-items-center flex-wrap justify-content-end">
+                    <input type="date" name="start_date" value="{{ start_date }}" class="form-control form-control-sm" style="width:150px;">
+                    <span class="text-muted">to</span>
+                    <input type="date" name="end_date" value="{{ end_date }}" class="form-control form-control-sm" style="width:150px;">
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
+                    {% if start_date or end_date %}
+                    <a href="{% url 'student_attendance_history' student.pk %}" class="btn btn-sm btn-outline-secondary">Clear</a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-2 mb-3">
+    <div class="col-6 col-md-3">
+        <div class="card text-center p-3">
+            <div class="fw-700 fs-5">{{ stats.total }}</div>
+            <div class="text-muted small">Total Sessions</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center p-3">
+            <div class="fw-700 fs-5 text-success">{{ stats.present }}</div>
+            <div class="text-muted small">Present</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center p-3">
+            <div class="fw-700 fs-5 text-danger">{{ stats.absent }}</div>
+            <div class="text-muted small">Absent</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center p-3">
+            <div class="fw-700 fs-5 {% if stats.percentage >= 75 %}text-success{% else %}text-danger{% endif %}">{{ stats.percentage }}%</div>
+            <div class="text-muted small">Attendance %</div>
+        </div>
+    </div>
+</div>
+
+<!-- History Table -->
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-list-ul me-2"></i>
+        Attendance Records {% if start_date or end_date %}(Filtered){% else %}(All Time){% endif %}
+        <span class="badge bg-secondary ms-2">{{ records|length }}</span>
+    </div>
+    <div class="card-body p-0">
+        {% if records %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr><th>Date</th><th>Day</th><th>Status</th><th>Marked At</th></tr>
+                </thead>
+                <tbody>
+                    {% for rec in records %}
+                    <tr class="{% if rec.status == 'P' %}att-row-present{% else %}att-row-absent{% endif %}">
+                        <td class="fw-600">{{ rec.date|date:"d M Y" }}</td>
+                        <td class="text-muted">{{ rec.date|date:"l" }}</td>
+                        <td>
+                            {% if rec.status == 'P' %}
+                            <span class="badge att-badge-normal"><i class="bi bi-check me-1"></i>Present</span>
+                            {% else %}
+                            <span class="badge att-badge-low"><i class="bi bi-x me-1"></i>Absent</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted small">{{ rec.marked_at|date:"d M Y, H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-calendar-x"></i>
+            <p>No attendance records found{% if start_date or end_date %} for the selected date range{% endif %}.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

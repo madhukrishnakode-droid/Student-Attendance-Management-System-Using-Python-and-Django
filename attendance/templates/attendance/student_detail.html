@@ -1,0 +1,136 @@
+{% extends "attendance/base.html" %}
+{% block title %}{{ student.full_name }} — Attendance System{% endblock %}
+{% block page_title %}Student Detail{% endblock %}
+{% block breadcrumb %}Home &rsaquo; <a href="{% url 'student_list' %}">Students</a> &rsaquo; {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-person-badge me-2 text-blue"></i>{{ student.full_name }}</h1>
+    <div class="d-flex gap-2">
+        <a href="{% url 'student_edit' student.pk %}" class="btn btn-warning btn-sm">
+            <i class="bi bi-pencil me-1"></i>Edit
+        </a>
+        <a href="{% url 'student_delete' student.pk %}" class="btn btn-outline-danger btn-sm">
+            <i class="bi bi-trash me-1"></i>Delete
+        </a>
+        <a href="{% url 'student_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Student Info -->
+    <div class="col-md-5">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-info-circle me-2"></i>Student Information</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5 text-muted small">Roll Number</dt>
+                    <dd class="col-7"><span class="badge-dept fw-600">{{ student.roll_number }}</span></dd>
+                    <dt class="col-5 text-muted small">Full Name</dt>
+                    <dd class="col-7 fw-600">{{ student.full_name }}</dd>
+                    <dt class="col-5 text-muted small">Department</dt>
+                    <dd class="col-7">{{ student.get_department_display }}</dd>
+                    <dt class="col-5 text-muted small">Year of Study</dt>
+                    <dd class="col-7">{{ student.get_year_of_study_display }}</dd>
+                    <dt class="col-5 text-muted small">Registered On</dt>
+                    <dd class="col-7">{{ student.created_at|date:"d M Y" }}</dd>
+                    <dt class="col-5 text-muted small">Last Updated</dt>
+                    <dd class="col-7">{{ student.updated_at|date:"d M Y" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Stats -->
+    <div class="col-md-7">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-bar-chart me-2"></i>Attendance Summary</div>
+            <div class="card-body">
+                <div class="row g-3 text-center mb-3">
+                    <div class="col-4">
+                        <div class="bg-light rounded p-3">
+                            <div class="fw-700 fs-4 text-primary">{{ stats.total }}</div>
+                            <div class="text-muted small">Total Sessions</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="bg-light rounded p-3">
+                            <div class="fw-700 fs-4 text-success">{{ stats.present }}</div>
+                            <div class="text-muted small">Present Days</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="bg-light rounded p-3">
+                            <div class="fw-700 fs-4 text-danger">{{ stats.absent }}</div>
+                            <div class="text-muted small">Absent Days</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-1 d-flex justify-content-between">
+                    <span class="fw-600">Attendance Percentage</span>
+                    <span class="fw-700 {% if stats.percentage >= 75 %}text-success{% elif stats.percentage > 0 %}text-danger{% else %}text-muted{% endif %}">
+                        {{ stats.percentage }}%
+                    </span>
+                </div>
+                <div class="progress mb-3" style="height:10px;">
+                    <div class="progress-bar {% if stats.percentage >= 75 %}bg-success{% else %}bg-danger{% endif %}"
+                         style="width:{{ stats.percentage }}%"></div>
+                </div>
+
+                {% if stats.total == 0 %}
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle me-2"></i>No attendance records for this student yet.
+                </div>
+                {% elif stats.percentage < 75 %}
+                <div class="alert alert-danger mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Low attendance! Below the 75% required threshold.
+                </div>
+                {% else %}
+                <div class="alert alert-success mb-0">
+                    <i class="bi bi-check-circle me-2"></i>Attendance is satisfactory (≥ 75%).
+                </div>
+                {% endif %}
+
+                <div class="mt-3">
+                    <a href="{% url 'student_attendance_history' student.pk %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-calendar3 me-1"></i>View Full Attendance History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Attendance -->
+{% if recent_records %}
+<div class="card mt-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock-history me-2"></i>Recent Attendance (Last 10)</span>
+        <a href="{% url 'student_attendance_history' student.pk %}" class="btn btn-sm btn-outline-primary">Full History</a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Date</th><th>Day</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for rec in recent_records %}
+                <tr>
+                    <td>{{ rec.date|date:"d M Y" }}</td>
+                    <td class="text-muted">{{ rec.date|date:"l" }}</td>
+                    <td>
+                        {% if rec.status == 'P' %}
+                        <span class="badge att-badge-normal"><i class="bi bi-check me-1"></i>Present</span>
+                        {% else %}
+                        <span class="badge att-badge-low"><i class="bi bi-x me-1"></i>Absent</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

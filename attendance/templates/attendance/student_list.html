@@ -1,0 +1,98 @@
+{% extends "attendance/base.html" %}
+{% block title %}Students — Attendance System{% endblock %}
+{% block page_title %}Students{% endblock %}
+{% block breadcrumb %}Home &rsaquo; Students{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-people-fill me-2 text-blue"></i>Students <span class="badge bg-secondary ms-2">{{ total_count }}</span></h1>
+    <a href="{% url 'student_add' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add Student
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small mb-1">Search</label>
+                <input type="text" name="search" id="searchInput" value="{{ search }}"
+                       class="form-control form-control-sm" placeholder="Name or roll number...">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small mb-1">Department</label>
+                <select name="department" class="form-select form-select-sm">
+                    <option value="">All Departments</option>
+                    {% for code, name in department_choices %}
+                    <option value="{{ code }}" {% if dept_filter == code %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-sm btn-primary w-100">
+                    <i class="bi bi-search me-1"></i>Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Student Table -->
+<div class="card">
+    <div class="card-body p-0">
+        {% if students %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Roll Number</th>
+                        <th>Full Name</th>
+                        <th>Department</th>
+                        <th>Year</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr class="filterable-row">
+                        <td class="text-muted">{{ forloop.counter }}</td>
+                        <td><span class="badge-dept">{{ student.roll_number }}</span></td>
+                        <td>
+                            <a href="{% url 'student_detail' student.pk %}" class="fw-600 text-decoration-none">
+                                {{ student.full_name }}
+                            </a>
+                        </td>
+                        <td>{{ student.get_department_display }}</td>
+                        <td>{{ student.get_year_of_study_display }}</td>
+                        <td>
+                            <a href="{% url 'student_detail' student.pk %}" class="btn btn-icon btn-outline-info btn-sm" title="View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'student_edit' student.pk %}" class="btn btn-icon btn-outline-warning btn-sm" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'student_delete' student.pk %}" class="btn btn-icon btn-outline-danger btn-sm" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-person-x"></i>
+            <p>{% if search or dept_filter %}No students found matching your filters.{% else %}No students registered yet.{% endif %}</p>
+            {% if not search and not dept_filter %}
+            <a href="{% url 'student_add' %}" class="btn btn-primary btn-sm">Add First Student</a>
+            {% else %}
+            <a href="{% url 'student_list' %}" class="btn btn-outline-secondary btn-sm">Clear Filters</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

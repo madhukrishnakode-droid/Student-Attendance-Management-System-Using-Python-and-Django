@@ -1,0 +1,150 @@
+{% extends "attendance/base.html" %}
+{% block title %}Attendance Reports — Attendance System{% endblock %}
+{% block page_title %}Attendance Reports{% endblock %}
+{% block breadcrumb %}Home &rsaquo; Reports{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-bar-chart-line-fill me-2 text-blue"></i>Attendance Reports</h1>
+    {% if report_data %}
+    <a href="{% url 'export_csv' %}?search={{ search }}&department={{ dept_filter }}&start_date={{ start_date }}&end_date={{ end_date }}"
+       class="btn btn-outline-success btn-sm">
+        <i class="bi bi-download me-1"></i>Export CSV
+    </a>
+    {% endif %}
+</div>
+
+<!-- Filters -->
+<div class="card mb-3">
+    <div class="card-header"><i class="bi bi-funnel me-2"></i>Filter Reports</div>
+    <div class="card-body">
+        <form method="get">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <label class="form-label small">Search</label>
+                    <input type="text" name="search" value="{{ search }}" class="form-control form-control-sm"
+                           placeholder="Name or roll number">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">Department</label>
+                    <select name="department" class="form-select form-select-sm">
+                        <option value="">All Departments</option>
+                        {% for code, name in department_choices %}
+                        <option value="{{ code }}" {% if dept_filter == code %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small">Start Date</label>
+                    <input type="date" name="start_date" value="{{ start_date }}" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small">End Date</label>
+                    <input type="date" name="end_date" value="{{ end_date }}" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Badges -->
+<div class="row g-2 mb-3">
+    <div class="col-auto">
+        <span class="badge att-badge-normal p-2">
+            <i class="bi bi-check-circle me-1"></i>Normal: {{ normal_count }}
+        </span>
+    </div>
+    <div class="col-auto">
+        <span class="badge att-badge-low p-2">
+            <i class="bi bi-exclamation-triangle me-1"></i>Low Attendance: {{ low_count }}
+        </span>
+    </div>
+    <div class="col-auto">
+        <span class="badge att-badge-none p-2">
+            <i class="bi bi-dash-circle me-1"></i>No Records: {{ no_records_count }}
+        </span>
+    </div>
+    {% if start_date or end_date %}
+    <div class="col-auto ms-auto">
+        <a href="{% url 'attendance_reports' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-x me-1"></i>Clear Filters
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Reports Table -->
+<div class="card">
+    <div class="card-body p-0">
+        {% if report_data %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Roll No.</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th class="text-center">Total</th>
+                        <th class="text-center">Present</th>
+                        <th class="text-center">Absent</th>
+                        <th style="min-width:150px;">Attendance %</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in report_data %}
+                    <tr>
+                        <td><span class="badge-dept">{{ row.student.roll_number }}</span></td>
+                        <td>
+                            <a href="{% url 'student_detail' row.student.pk %}" class="fw-600 text-decoration-none">
+                                {{ row.student.full_name }}
+                            </a>
+                        </td>
+                        <td>{{ row.student.get_department_display }}</td>
+                        <td class="text-center">{{ row.total }}</td>
+                        <td class="text-center text-success fw-600">{{ row.present }}</td>
+                        <td class="text-center text-danger fw-600">{{ row.absent }}</td>
+                        <td>
+                            <div class="progress mb-1" style="height:6px;">
+                                <div class="progress-bar {% if row.percentage >= 75 %}bg-success{% else %}bg-danger{% endif %}"
+                                     style="width:{{ row.percentage }}%"></div>
+                            </div>
+                            <small class="{% if row.percentage >= 75 %}text-success{% elif row.percentage > 0 %}text-danger{% else %}text-muted{% endif %} fw-600">
+                                {{ row.percentage }}%
+                            </small>
+                        </td>
+                        <td>
+                            {% if row.status_label == 'normal' %}
+                            <span class="badge att-badge-normal"><i class="bi bi-check-circle me-1"></i>Normal</span>
+                            {% elif row.status_label == 'low' %}
+                            <span class="badge att-badge-low"><i class="bi bi-exclamation-triangle me-1"></i>Low</span>
+                            {% else %}
+                            <span class="badge att-badge-none"><i class="bi bi-dash me-1"></i>No Records</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'student_attendance_history' row.student.pk %}" class="btn btn-icon btn-outline-info btn-sm" title="View History">
+                                <i class="bi bi-calendar3"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-clipboard-x"></i>
+            <p>No students found matching your filters.</p>
+            <a href="{% url 'attendance_reports' %}" class="btn btn-outline-secondary btn-sm">Clear Filters</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

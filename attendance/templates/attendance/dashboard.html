@@ -1,0 +1,185 @@
+{% extends "attendance/base.html" %}
+{% block title %}Dashboard — Attendance System{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block breadcrumb %}Home &rsaquo; Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-speedometer2 me-2 text-blue"></i>Dashboard</h1>
+    <div class="d-flex align-items-center gap-2">
+        <form method="get" class="d-flex align-items-center gap-2">
+            <label class="form-label mb-0 fw-600 small">Date:</label>
+            <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}"
+                   class="form-control form-control-sm" style="width:160px;"
+                   onchange="this.form.submit()">
+        </form>
+        <a href="{% url 'student_add' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>Add Student
+        </a>
+        <a href="{% url 'mark_attendance' %}" class="btn btn-success btn-sm">
+            <i class="bi bi-check2-square me-1"></i>Mark Attendance
+        </a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card stat-card-blue">
+            <div class="stat-label">Total Students</div>
+            <div class="stat-value">{{ total_students }}</div>
+            <i class="bi bi-people-fill stat-icon"></i>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card stat-card-green">
+            <div class="stat-label">Present Today</div>
+            <div class="stat-value">{{ day_present }}</div>
+            <i class="bi bi-check-circle-fill stat-icon"></i>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card stat-card-red">
+            <div class="stat-label">Absent Today</div>
+            <div class="stat-value">{{ day_absent }}</div>
+            <i class="bi bi-x-circle-fill stat-icon"></i>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card stat-card-orange">
+            <div class="stat-label">Today's %</div>
+            <div class="stat-value">{{ day_percentage }}%</div>
+            <i class="bi bi-percent stat-icon"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Date info -->
+<div class="alert alert-info mb-4">
+    <i class="bi bi-calendar-event me-2"></i>
+    Showing attendance for <strong>{{ selected_date|date:"l, d F Y" }}</strong>.
+    {% if day_total == 0 %}
+        <strong>No attendance records found for this date.</strong>
+        <a href="{% url 'mark_attendance' %}?date={{ selected_date|date:'Y-m-d' }}" class="btn btn-sm btn-primary ms-2">
+            Mark Now
+        </a>
+    {% else %}
+        {{ day_total }} student(s) recorded.
+    {% endif %}
+</div>
+
+<div class="row g-3">
+    <!-- Recent Attendance Activity -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock-history me-2"></i>Recent Attendance Activity</span>
+                <a href="{% url 'attendance_reports' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_attendance %}
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for att in recent_attendance %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'student_detail' att.student.pk %}">{{ att.student.full_name }}</a>
+                                <small class="d-block text-muted">{{ att.student.roll_number }}</small>
+                            </td>
+                            <td>{{ att.date|date:"d M Y" }}</td>
+                            <td>
+                                {% if att.status == 'P' %}
+                                <span class="badge att-badge-normal"><i class="bi bi-check me-1"></i>Present</span>
+                                {% else %}
+                                <span class="badge att-badge-low"><i class="bi bi-x me-1"></i>Absent</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-clipboard-x"></i>
+                    <p>No attendance records yet.</p>
+                    <a href="{% url 'mark_attendance' %}" class="btn btn-sm btn-primary">Mark Attendance</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recently Added Students -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-person-plus me-2"></i>Recently Added Students</span>
+                <a href="{% url 'student_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_students %}
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Roll</th><th>Name</th><th>Dept</th></tr></thead>
+                    <tbody>
+                        {% for s in recent_students %}
+                        <tr>
+                            <td><span class="badge-dept">{{ s.roll_number }}</span></td>
+                            <td><a href="{% url 'student_detail' s.pk %}">{{ s.full_name }}</a></td>
+                            <td>{{ s.get_department_display }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-person-x"></i>
+                    <p>No students registered yet.</p>
+                    <a href="{% url 'student_add' %}" class="btn btn-sm btn-primary">Add First Student</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Low Attendance Warning -->
+{% if low_attendance_students %}
+<div class="card mt-3">
+    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-exclamation-triangle me-2"></i>Low Attendance Warning (Below 75%)</span>
+        <a href="{% url 'attendance_reports' %}" class="btn btn-sm btn-light">Full Report</a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Roll Number</th><th>Name</th><th>Department</th><th>Attendance %</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in low_attendance_students %}
+                <tr>
+                    <td><span class="badge-dept">{{ item.student.roll_number }}</span></td>
+                    <td><a href="{% url 'student_detail' item.student.pk %}">{{ item.student.full_name }}</a></td>
+                    <td>{{ item.student.get_department_display }}</td>
+                    <td>
+                        <div class="progress mb-1" style="width:100px;">
+                            <div class="progress-bar bg-danger" style="width:{{ item.percentage }}%"></div>
+                        </div>
+                        <span class="badge att-badge-low">{{ item.percentage }}%</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
